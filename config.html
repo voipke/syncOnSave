@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修改配置文件</title>
+</head>
+<body>
+    <form id="configForm">
+        <!-- 假设配置文件中有 targetFolders.path、include、exclude、syncOnSave、createTargetFolder 选项 -->
+        <label for="targetPath">目标文件夹路径:</label>
+        <input type="text" id="targetPath" name="targetPath"><br><br>
+        <label for="includePatterns">包含规则:</label>
+        <input type="text" id="includePatterns" name="includePatterns"><br><br>
+        <label for="excludePatterns">排除规则:</label>
+        <input type="text" id="excludePatterns" name="excludePatterns"><br><br>
+        <label for="syncOnSave">保存时同步:</label>
+        <input type="checkbox" id="syncOnSave" name="syncOnSave"><br><br>
+        <label for="createTargetFolder">创建目标文件夹:</label>
+        <input type="checkbox" id="createTargetFolder" name="createTargetFolder"><br><br>
+        <input type="submit" value="提交">
+    </form>
+    <script>
+        document.getElementById('configForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const targetPath = document.getElementById('targetPath').value;
+            const includePatterns = document.getElementById('includePatterns').value.split(',');
+            const excludePatterns = document.getElementById('excludePatterns').value.split(',');
+            const syncOnSave = document.getElementById('syncOnSave').checked;
+            const createTargetFolder = document.getElementById('createTargetFolder').checked;
+            const newConfig = {
+                targetFolders: [{
+                    path: targetPath,
+                    include: includePatterns,
+                    exclude: excludePatterns
+                }],
+                syncOnSave: syncOnSave,
+                createTargetFolder: createTargetFolder
+            };
+            const configPath = 'sync.json';
+            try {
+                const fs = require('fs');
+                fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
+                alert('配置文件更新成功');
+            } catch (error) {
+                alert('配置文件更新失败: ' + error);
+            }
+
+            fetch('update-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newConfig)
+            })
+           .then(response => response.json())
+           .then(data => {
+                if (data.success) {
+                    alert('配置文件更新成功');
+                } else {
+                    alert('配置文件更新失败: ' + data.message);
+                }
+            })
+           .catch(error => {
+                alert('发生错误: ' + error);
+            });
+        });
+    </script>
+</body>
+</html>

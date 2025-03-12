@@ -1,0 +1,11 @@
+{
+  "targetFolders": [
+    {
+      "path": ".",
+      "include": ["**/*.ts", "**/*.js"],
+      "exclude": ["node_modules/**"]
+    }
+  ],
+  "syncOnSave": true,
+  "createTargetFolder": true
+}

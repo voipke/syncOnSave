@@ -16,6 +16,12 @@
     "categories": [
         "Other"
     ],
+    "files": [
+        "README.md",
+        "resources/",
+        "out/",
+        "package.json"
+    ],
     "activationEvents": [
         "onFileSystem:file"
     ],

@@ -18,6 +18,7 @@ This extension synchronizes files automatically when you save them.
 Edit your owner sync configures in sync.json file.
 
 ## Configuration
+![示例图片](./resources/config.png)
 
 Add the following to your sync.json:
 

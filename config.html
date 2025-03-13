@@ -1,70 +1,204 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>修改配置文件</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 800px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 2fr 2fr 2fr auto;
+            gap: 15px;
+            align-items: flex-start; /* 确保子元素顶端对齐 */
+            margin-bottom: 15px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            height: 150px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        input[type="checkbox"] {
+            margin: 0;
+            justify-self: start;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .submit-button {
+            grid-column: span 4;
+            background-color: #28a745;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            background-color: #218838;
+        }
+
+        .remove-button {
+            background-color: #dc3545;
+            color: #fff;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .remove-button:hover {
+            background-color: #c82333;
+        }
+    </style>
 </head>
+
 <body>
     <form id="configForm">
-        <!-- 假设配置文件中有 targetFolders.path、include、exclude、syncOnSave、createTargetFolder 选项 -->
-        <label for="targetPath">目标文件夹路径:</label>
-        <input type="text" id="targetPath" name="targetPath"><br><br>
-        <label for="includePatterns">包含规则:</label>
-        <input type="text" id="includePatterns" name="includePatterns"><br><br>
-        <label for="excludePatterns">排除规则:</label>
-        <input type="text" id="excludePatterns" name="excludePatterns"><br><br>
-        <label for="syncOnSave">保存时同步:</label>
-        <input type="checkbox" id="syncOnSave" name="syncOnSave"><br><br>
-        <label for="createTargetFolder">创建目标文件夹:</label>
-        <input type="checkbox" id="createTargetFolder" name="createTargetFolder"><br><br>
-        <input type="submit" value="提交">
+        <div><h1>同步功能配置</h1></div>
+        <div id="folderConfigs">
+            <div class="form-grid">
+                <input type="text" name="targetPath" placeholder="目标文件夹路径" required>
+                <textarea name="includePatterns" placeholder="包含规则（每行一个规则）"></textarea>
+                <textarea name="excludePatterns" placeholder="排除规则（每行一个规则）"></textarea>
+                <button type="button" class="remove-button" onclick="removeFolderConfig(this)">移除</button>
+            </div>
+        </div>
+        <button type="button" onclick="addFolderConfig()">添加配置</button></p>
+        <div class="form-grid">
+            <label for="syncOnSave">保存时同步:</label>
+            <input type="checkbox" id="syncOnSave" name="syncOnSave" checked>
+        </div>
+        <div class="form-grid">
+            <label for="createTargetFolder">创建目标文件夹:</label>
+            <input type="checkbox" id="createTargetFolder" name="createTargetFolder" checked>
+        <input type="submit" class="submit-button" value="提交">
     </form>
     <script>
-        document.getElementById('configForm').addEventListener('submit', function(event) {
+        // 检查是否已经获取了VS Code API
+        const vscode = acquireVsCodeApi();
+
+        document.querySelector('textarea[name="includePatterns"]').value = "**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake**/*.ts\n**/*.js";
+        document.querySelector('textarea[name="excludePatterns"]').value = "node_modules/**\n.git/**\ngithub/**\ngitlab/**";
+        // 添加新的配置行
+        function addFolderConfig() {
+            const folderConfigs = document.getElementById('folderConfigs');
+            const newConfig = document.createElement('div');
+            newConfig.className = 'form-grid';
+            newConfig.innerHTML = `
+                <input type="text" name="targetPath" placeholder="目标文件夹路径" required>
+                <textarea name="includePatterns" placeholder="包含规则（每行一个规则）">**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake**/*.ts\n**/*.js</textarea>
+                <textarea name="excludePatterns" placeholder="排除规则（每行一个规则）">node_modules/**\n.git/**\ngithub/**\ngitlab/**</textarea>
+                <button type="button" class="remove-button" onclick="removeFolderConfig(this)">移除</button>
+            `;
+            folderConfigs.appendChild(newConfig);
+        }
+
+        // 移除配置行
+        function removeFolderConfig(button) {
+            const folderConfigs = document.getElementById('folderConfigs');
+            if (folderConfigs.children.length > 1) {
+                button.parentElement.remove();
+            } else {
+                alert("至少需要保留一个配置！");
+            }
+        }
+
+        // 提交表单
+        document.getElementById('configForm').addEventListener('submit', function (event) {
             event.preventDefault();
-            const targetPath = document.getElementById('targetPath').value;
-            const includePatterns = document.getElementById('includePatterns').value.split(',');
-            const excludePatterns = document.getElementById('excludePatterns').value.split(',');
-            const syncOnSave = document.getElementById('syncOnSave').checked;
-            const createTargetFolder = document.getElementById('createTargetFolder').checked;
-            const newConfig = {
-                targetFolders: [{
+
+            const folderConfigs = document.querySelectorAll('#folderConfigs .form-grid');
+            const targetFolders = [];
+            folderConfigs.forEach(config => {
+                const targetPath = config.querySelector('input[name="targetPath"]').value;
+                const includePatterns = config.querySelector('textarea[name="includePatterns"]').value.split('\n').filter(line => line.trim() !== '');
+                const excludePatterns = config.querySelector('textarea[name="excludePatterns"]').value.split('\n').filter(line => line.trim() !== '');
+                targetFolders.push({
                     path: targetPath,
                     include: includePatterns,
                     exclude: excludePatterns
-                }],
+                });
+            });
+
+            const syncOnSave = document.getElementById('syncOnSave').checked;
+            const createTargetFolder = document.getElementById('createTargetFolder').checked;
+
+            const newConfig = {
+                targetFolders: targetFolders,
                 syncOnSave: syncOnSave,
                 createTargetFolder: createTargetFolder
             };
-            const configPath = 'sync.json';
-            try {
-                const fs = require('fs');
-                fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
-                alert('配置文件更新成功');
-            } catch (error) {
-                alert('配置文件更新失败: ' + error);
-            }
 
-            fetch('update-config', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(newConfig)
-            })
-           .then(response => response.json())
-           .then(data => {
-                if (data.success) {
-                    alert('配置文件更新成功');
-                } else {
-                    alert('配置文件更新失败: ' + data.message);
+            vscode.postMessage({
+                command: 'updateConfig',
+                data: JSON.stringify(newConfig, null, 2)
+            });
+
+            // 监听主进程返回的消息
+            window.addEventListener('message', (event) => {
+                if (event.data.command === 'updateConfigResult') {
+                    if (event.data.success) {
+                        console.log("Config updated successfully!");
+                        vscode.postMessage({ command: 'showAlert', message: 'Config updated successfully!' });
+                    } else {
+                        console.error("Config update failed:", event.data.error);
+                        vscode.postMessage({ command: 'showAlert', message: "Config update failed:" + event.data.error });
+                    }
                 }
-            })
-           .catch(error => {
-                alert('发生错误: ' + error);
             });
         });
     </script>
 </body>
+
 </html>

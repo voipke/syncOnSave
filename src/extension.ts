@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as minimatch from 'minimatch';
+import * as prettier from 'prettier';
 
 interface SyncConfig {
     targetFolders: Array<{
@@ -37,22 +38,57 @@ export function activate(context: vscode.ExtensionContext) {
                 fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
             }
 
-            const doc = await vscode.workspace.openTextDocument(configPath);
-            await vscode.window.showTextDocument(doc);
-            // const htmlPath = vscode.Uri.joinPath(context.extensionUri, 'config.html');
-            // const htmlDoc = await vscode.workspace.openTextDocument(htmlPath);
-            // const panel = vscode.window.createWebviewPanel('configSync', '配置同步', vscode.ViewColumn.One, {});
-            // panel.webview.html = await htmlDoc.getText();
+            // const doc = await vscode.workspace.openTextDocument(configPath);
+            // await vscode.window.showTextDocument(doc);
+            const htmlPath = vscode.Uri.joinPath(context.extensionUri, 'config.html');
+            const htmlDoc = await vscode.workspace.openTextDocument(htmlPath);
+            const panel = vscode.window.createWebviewPanel('configSync', '配置同步', vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    enableForms: true,
+                    enableCommandUris: true, // 启用命令 URI
+                    retainContextWhenHidden: true, // 保留上下文
+                }
+            );
+            panel.webview.onDidReceiveMessage((message) => {
+                switch (message.command) {
+                    case 'showAlert':
+                        vscode.window.showInformationMessage(message.message);
+                        break;
+                    case 'updateConfig':
+                        try {
+                            // 处理配置文件更新
+                            const configPath = path.join(vscode.workspace.rootPath || '', 'sync.json');
+                            const formattedJson = message.data; //JSON.stringify(message.data, null, 2);
+                            fs.writeFileSync(configPath, formattedJson, 'utf-8');
+
+                            // 发送成功消息回 Webview
+                            panel.webview.postMessage({
+                                command: 'updateConfigResult',
+                                success: true
+                            });
+                        } catch (error) {
+                            // 发送失败消息回 Webview
+                            panel.webview.postMessage({
+                                command: 'updateConfigResult',
+                                success: false,
+                                error: `${error}`
+                            });
+                        }
+                        break;
+                }
+            });
+            panel.webview.html = await htmlDoc.getText();
         })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand('syncOnSave.stopSyncFile', async () => {
-          bSyning = false;
+            bSyning = false;
         })
     );
     context.subscriptions.push(
         vscode.commands.registerCommand('syncOnSave.startSyncFile', async () => {
-          bSyning = true;
+            bSyning = true;
         })
     );
     try {
@@ -61,7 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
             const configPath = path.join(vscode.workspace.rootPath || '', 'sync.json');
 
             if (!bSyning) {
-              return;
+                return;
             }
             if (!config) {
                 if (!fs.existsSync(configPath)) {
@@ -74,7 +110,7 @@ export function activate(context: vscode.ExtensionContext) {
                     console.log('未找到sync.json配置文件，不激活watcher');
                     vscode.window.showErrorMessage(`配置文件格式读取失败: ${error}`);
                     return;
-                }                
+                }
             } else if (filePath === configPath) {
                 try {
                     const newConfig: SyncConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
@@ -92,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             for (const target of config.targetFolders) {
                 if (target.path === '' || path.resolve(vscode.workspace.rootPath || '', target.path) === vscode.workspace.rootPath) {
-                  continue;
+                    continue;
                 }
                 const targetPath = path.resolve(vscode.workspace.rootPath || '', target.path);
                 if (config.createTargetFolder && !fs.existsSync(targetPath)) {

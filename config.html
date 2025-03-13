@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>修改配置文件</title>
+    <title>Modify Configuration File</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,20 +22,22 @@
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 800px;
+            width: 80%;
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: 2fr 2fr 2fr auto;
             gap: 15px;
-            align-items: flex-start; /* 确保子元素顶端对齐 */
+            align-items: flex-start;
             margin-bottom: 15px;
         }
+
         h1 {
             text-align: center;
             margin-bottom: 50px;
         }
+
         label {
             font-weight: bold;
         }
@@ -100,61 +102,126 @@
         .remove-button:hover {
             background-color: #c82333;
         }
+
+        .language-switcher {
+            align-items: flex-end;
+        }
     </style>
 </head>
 
 <body>
     <form id="configForm">
-        <div><h1>同步功能配置</h1></div>
+        <div class="language-switcher">
+            <select id="language-selector">
+                <option value="en">English</option>
+                <option value="zh">中文</option>
+            </select>
+        </div>
+        <div>
+            <h1 id="form-title">Synchronization Configuration</h1>
+        </div>
         <div id="folderConfigs">
             <div class="form-grid">
-                <input type="text" name="targetPath" placeholder="目标文件夹路径" required>
-                <textarea name="includePatterns" placeholder="包含规则（每行一个规则）"></textarea>
-                <textarea name="excludePatterns" placeholder="排除规则（每行一个规则）"></textarea>
-                <button type="button" class="remove-button" onclick="removeFolderConfig(this)">移除</button>
+                <input type="text" name="targetPath" placeholder="Target Folder Path" required>
+                <textarea name="includePatterns" placeholder="Include Patterns (one per line)"></textarea>
+                <textarea name="excludePatterns" placeholder="Exclude Patterns (one per line)"></textarea>
+                <button type="button" class="remove-button" id="remove-button">Remove</button>
             </div>
         </div>
-        <button type="button" onclick="addFolderConfig()">添加配置</button></p>
+        <button type="button" id="add-button" onclick="addFolderConfig()">Add Configuration</button>
         <div class="form-grid">
-            <label for="syncOnSave">保存时同步:</label>
+            <label for="syncOnSave" id="sync-label">Sync on Save:</label>
             <input type="checkbox" id="syncOnSave" name="syncOnSave" checked>
         </div>
         <div class="form-grid">
-            <label for="createTargetFolder">创建目标文件夹:</label>
+            <label for="createTargetFolder" id="create-label">Create Target Folder:</label>
             <input type="checkbox" id="createTargetFolder" name="createTargetFolder" checked>
-        <input type="submit" class="submit-button" value="提交">
+        </div>
+        <input type="submit" class="submit-button" id="submit-button" value="Submit">
     </form>
     <script>
-        // 检查是否已经获取了VS Code API
+        // 语言资源
+        const translations = {
+            en: {
+                title: "Synchronization Configuration",
+                targetPath: "Target Folder Path",
+                includePatterns: "Include Patterns (one per line)",
+                excludePatterns: "Exclude Patterns (one per line)",
+                remove: "Remove",
+                add: "Add Configuration",
+                sync: "Sync on Save:",
+                create: "Create Target Folder:",
+                submit: "Submit",
+                alert: "At least one configuration must be retained!"
+            },
+            zh: {
+                title: "同步功能配置",
+                targetPath: "目标文件夹路径",
+                includePatterns: "包含规则（每行一个规则）",
+                excludePatterns: "排除规则（每行一个规则）",
+                remove: "移除",
+                add: "添加配置",
+                sync: "保存时同步:",
+                create: "创建目标文件夹:",
+                submit: "提交",
+                alert: "至少需要保留一个配置！"
+            }
+        };
+
+        // 默认语言
+        let currentLang = 'en';
+
+        // 更新页面语言
+        function updateLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+            document.getElementById('form-title').textContent = translations[lang].title;
+            document.querySelector('input[name="targetPath"]').placeholder = translations[lang].targetPath;
+            document.querySelector('textarea[name="includePatterns"]').placeholder = translations[lang].includePatterns;
+            document.querySelector('textarea[name="excludePatterns"]').placeholder = translations[lang].excludePatterns;
+            document.getElementById('remove-button').textContent = translations[lang].remove;
+            document.getElementById('add-button').textContent = translations[lang].add;
+            document.getElementById('sync-label').textContent = translations[lang].sync;
+            document.getElementById('create-label').textContent = translations[lang].create;
+            document.getElementById('submit-button').value = translations[lang].submit;
+        }
+
+        // 语言切换器
+        document.getElementById('language-selector').addEventListener('change', function () {
+            const lang = this.value;
+            updateLanguage(lang);
+        });
+
+        // 初始化语言
+        updateLanguage(currentLang);
+
         const vscode = acquireVsCodeApi();
 
-        document.querySelector('textarea[name="includePatterns"]').value = "**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake**/*.ts\n**/*.js";
+        document.querySelector('textarea[name="includePatterns"]').value = "**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\n**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake\n**/*.ts\n**/*.js";
         document.querySelector('textarea[name="excludePatterns"]').value = "node_modules/**\n.git/**\ngithub/**\ngitlab/**";
-        // 添加新的配置行
+
         function addFolderConfig() {
             const folderConfigs = document.getElementById('folderConfigs');
             const newConfig = document.createElement('div');
             newConfig.className = 'form-grid';
             newConfig.innerHTML = `
-                <input type="text" name="targetPath" placeholder="目标文件夹路径" required>
-                <textarea name="includePatterns" placeholder="包含规则（每行一个规则）">**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake**/*.ts\n**/*.js</textarea>
-                <textarea name="excludePatterns" placeholder="排除规则（每行一个规则）">node_modules/**\n.git/**\ngithub/**\ngitlab/**</textarea>
-                <button type="button" class="remove-button" onclick="removeFolderConfig(this)">移除</button>
+                <input type="text" name="targetPath" placeholder="${translations[currentLang].targetPath}" required>
+                <textarea name="includePatterns" placeholder="${translations[currentLang].includePatterns}">**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\n**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake\n**/*.ts\n**/*.js</textarea>
+                <textarea name="excludePatterns" placeholder="${translations[currentLang].excludePatterns}">node_modules/**\n.git/**\ngithub/**\ngitlab/**</textarea>
+                <button type="button" class="remove-button" onclick="removeFolderConfig(this)">${translations[currentLang].remove}</button>
             `;
             folderConfigs.appendChild(newConfig);
         }
 
-        // 移除配置行
         function removeFolderConfig(button) {
             const folderConfigs = document.getElementById('folderConfigs');
             if (folderConfigs.children.length > 1) {
                 button.parentElement.remove();
             } else {
-                alert("至少需要保留一个配置！");
+                alert(translations[currentLang].alert);
             }
         }
 
-        // 提交表单
         document.getElementById('configForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
@@ -185,7 +252,6 @@
                 data: JSON.stringify(newConfig, null, 2)
             });
 
-            // 监听主进程返回的消息
             window.addEventListener('message', (event) => {
                 if (event.data.command === 'updateConfigResult') {
                     if (event.data.success) {

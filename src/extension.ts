@@ -17,7 +17,7 @@ interface SyncConfig {
     fileEncoderSelector: string;
 }
 
-let config: SyncConfig;
+let globalConfig: SyncConfig;
 let bSyning: boolean = true;
 
 /**
@@ -100,7 +100,7 @@ export function activate(context: vscode.ExtensionContext) {
                             const configPath = vscode.workspace.rootPath ? path.join(vscode.workspace.rootPath, 'sync.json') : '';
                             const formattedJson = message.data; //JSON.stringify(message.data, null, 2);
                             fs.writeFileSync(configPath, formattedJson, 'utf-8');
-
+                            globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
                             // 发送成功消息回 Webview
                             panel.webview.postMessage({
                                 command: 'updateConfigResult',
@@ -182,13 +182,13 @@ export function activate(context: vscode.ExtensionContext) {
             if (!bSyning) {
                 return;
             }
-            if (!config) {
+            if (!globalConfig) {
                 if (!fs.existsSync(configPath)) {
                     // console.log('未找到sync.json配置文件，不激活watcher');
                     return;
                 }
                 try {
-                    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+                    globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
                 } catch (error) {
                     console.log('未找到sync.json配置文件，不激活watcher');
                     vscode.window.showErrorMessage(`配置文件格式读取失败: ${error}`);
@@ -197,7 +197,7 @@ export function activate(context: vscode.ExtensionContext) {
             } else if (filePath === configPath) {
                 try {
                     const newConfig: SyncConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-                    config = newConfig;
+                    globalConfig = newConfig;
                     vscode.window.setStatusBarMessage('同步配置已更新');
                 } catch (error) {
                     vscode.window.showErrorMessage(`同步配置更新失败: ${error}`);
@@ -205,11 +205,11 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            if (!config.syncOnSave) {
+            if (!globalConfig.syncOnSave) {
                 return;
             }
 
-            for (const target of config.targetFolders) {
+            for (const target of globalConfig.targetFolders) {
                 if (target.path === '' || path.resolve(vscode.workspace.rootPath || '', target.path) === vscode.workspace.rootPath) {
                     continue;
                 }
@@ -219,7 +219,7 @@ export function activate(context: vscode.ExtensionContext) {
                 const destPath = path.join(targetPath, relativePath);
                 try {
                     const destDir = path.dirname(destPath);
-                    if (config.createTargetFolder && !fs.existsSync(destDir)) {
+                    if (globalConfig.createTargetFolder && !fs.existsSync(destDir)) {
                         fs.mkdirSync(destDir, { recursive: true });
                     }
                 } catch (error) {
@@ -236,9 +236,9 @@ export function activate(context: vscode.ExtensionContext) {
                 if (shouldSync) {
                     try {
                         // 执行文件复制
-                        if (config.fileEncoderSelector === 'lf') {
+                        if (globalConfig.fileEncoderSelector === 'lf') {
                             copyFileWithLineEnding(filePath, destPath, 'lf');
-                        } else if (config.fileEncoderSelector === 'crlf') {
+                        } else if (globalConfig.fileEncoderSelector === 'crlf') {
                             copyFileWithLineEnding(filePath, destPath, 'crlf');
                         } else {
                             fs.copyFileSync(filePath, destPath);

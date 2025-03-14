@@ -8,6 +8,7 @@ The syncOnSave extension supports backing up files to other folders upon saving.
 - Supports backup configurations for multiple paths.
 - File formats can be specified using regular expressions.
 - Supports format filtering and regular expressions.
+- Supports modification of file encoding line format during synchronization.
 
 ## Installation
 
@@ -22,7 +23,7 @@ The syncOnSave extension supports backing up files to other folders upon saving.
 
 ## Configuration
 ![Config](resources/config_en.png)
-<img alt="config" src='https://s3.bmp.ovh/imgs/2025/03/14/29bc1d1ec066806b.png'>
+<img alt="config" src = 'https://cdn.jsdelivr.net/gh/voipke/syncOnSave/resources/config_en.png' >
 
 Open the syncOnSave configuration page using the syncOnSave.initConfigSyncFile command: (./resources/config_en.png)
 1. Target Folder Path: Specifies the folder where you want to back up files upon saving.

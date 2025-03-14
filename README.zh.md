@@ -8,6 +8,7 @@ syncOnSave扩展支持在保存的时候把文件保存备份到其他的文件�
 - 支持多个路径的备份配置。
 - 文件格式支持正则表达式。
 - 支持格式过滤和正在表达式。
+- 支持同步时文件编码行格式的修改。
 
 ## 安装
 
@@ -21,7 +22,7 @@ syncOnSave扩展支持在保存的时候把文件保存备份到其他的文件�
 
 ## 配置
 ![配置](resources/config_cn.png)
-<img alt="config" src = 'https://cdn.jsdelivr.net/gh/voipke/syncOnSave/resources/config_en.png' >
+<img alt="config" src = 'https://cdn.jsdelivr.net/gh/voipke/syncOnSave/resources/config_cn.png' >
 
 
 通过syncOnSave.initConfigSyncFile命令打开syncOnSave的配置页面：(./resources/config_cn.png)

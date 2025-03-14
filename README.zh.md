@@ -21,6 +21,8 @@ syncOnSave扩展支持在保存的时候把文件保存备份到其他的文件�
 
 ## 配置
 ![配置](resources/config_cn.png)
+<img alt="config" src = 'https://cdn.jsdelivr.net/gh/voipke/syncOnSave/resources/config_en.png' >
+
 
 通过syncOnSave.initConfigSyncFile命令打开syncOnSave的配置页面：(./resources/config_cn.png)
 1. 目标文件夹表示保存文件时想把文件备份到哪个文件夹

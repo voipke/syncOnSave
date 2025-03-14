@@ -11,23 +11,23 @@ The syncOnSave extension supports backing up files to other folders upon saving.
 
 ## Installation
 
-1. Search for syncOnSave in the VS Code Marketplace and install it.
-2. Use the syncOnSave.initConfigSyncFile command to open the configuration page and initialize the creation of the sync.json file.
-3. Configure synchronization rules via the web-based UI.
-4. If you are familiar with syncOnSave, you can directly edit the sync.json file manually.
+1. Install syncOnSave directly from the Visual Studio Code extension gallery.
+2. Search for syncOnSave in the VS Code Marketplace and install it.
 
 ## Usage
+
+1. Select the syncOnSave.initConfigSyncFile command to open the configuration page and simultaneously initialize the creation of the sync.json file.
+2. Configure synchronization rules via the web-based UI.
+3. If you are familiar with syncOnSave, you can directly edit the sync.json file manually.
+
+## Configuration
+![Config](resources/config_en.png)
+<img alt="config" src='https://s3.bmp.ovh/imgs/2025/03/14/29bc1d1ec066806b.png'>
 
 Open the syncOnSave configuration page using the syncOnSave.initConfigSyncFile command: (./resources/config_en.png)
 1. Target Folder Path: Specifies the folder where you want to back up files upon saving.
 2. Include Patterns (one per line): Specifies which file formats should be backed up. Rules support regular expressions.
 3. Exclude Patterns (one per line): Specifies which file formats should not be backed up. Rules support regular expressions.
-
-## Configuration
-![Sample picture](./resources/config_en.png)
-![Sample picture](./resources/config_cn.png)
-
-Add the following to your sync.json:
 
 ```json
 {

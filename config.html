@@ -121,12 +121,8 @@
             <h1 id="form-title">Synchronization Configuration</h1>
         </div>
         <div id="folderConfigs">
-            <div class="form-grid">
-                <input type="text" name="targetPath" placeholder="Target Folder Path" required>
-                <textarea name="includePatterns" placeholder="Include Patterns (one per line)"></textarea>
-                <textarea name="excludePatterns" placeholder="Exclude Patterns (one per line)"></textarea>
-                <button type="button" class="remove-button" id="remove-button">Remove</button>
-            </div>
+            <!-- SYNC_JSON_CONTENT -->
+
         </div>
         <button type="button" id="add-button" onclick="addFolderConfig()">Add Configuration</button>
         <div class="form-grid">
@@ -137,7 +133,7 @@
             <label for="createTargetFolder" id="create-label">Create Target Folder:</label>
             <input type="checkbox" id="createTargetFolder" name="createTargetFolder" checked>
         </div>
-        <input type="submit" class="submit-button" id="submit-button" value="Submit">
+        <input type="submit" class="submit-button" id="submit-button" value="Save">
     </form>
     <script>
         // 语言资源
@@ -151,7 +147,7 @@
                 add: "Add Configuration",
                 sync: "Sync on Save:",
                 create: "Create Target Folder:",
-                submit: "Submit",
+                submit: "Save",
                 alert: "At least one configuration must be retained!"
             },
             zh: {
@@ -163,7 +159,7 @@
                 add: "添加配置",
                 sync: "保存时同步:",
                 create: "创建目标文件夹:",
-                submit: "提交",
+                submit: "保存",
                 alert: "至少需要保留一个配置！"
             }
         };
@@ -206,8 +202,8 @@
             newConfig.className = 'form-grid';
             newConfig.innerHTML = `
                 <input type="text" name="targetPath" placeholder="${translations[currentLang].targetPath}" required>
-                <textarea name="includePatterns" placeholder="${translations[currentLang].includePatterns}">**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\n**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake\n**/*.ts\n**/*.js</textarea>
-                <textarea name="excludePatterns" placeholder="${translations[currentLang].excludePatterns}">node_modules/**\n.git/**\ngithub/**\ngitlab/**</textarea>
+                <textarea name="includePatterns" placeholder="${translations[currentLang].includePatterns}"></textarea>
+                <textarea name="excludePatterns" placeholder="${translations[currentLang].excludePatterns}"></textarea>
                 <button type="button" class="remove-button" onclick="removeFolderConfig(this)">${translations[currentLang].remove}</button>
             `;
             folderConfigs.appendChild(newConfig);

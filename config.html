@@ -133,6 +133,10 @@
             <label for="createTargetFolder" id="create-label">Create Target Folder:</label>
             <input type="checkbox" id="createTargetFolder" name="createTargetFolder" checked>
         </div>
+        <div class="form-grid">
+            <label for="fileEncoderSelector" id="file-encoder">File Encoder Format:</label>
+            <select id="fileEncoderSelector" name="fileEncoderSelector"><option value="nochange">no change</option><option value="lf">lf</option><option value="crlf">crlf</option></select>
+        </div>
         <input type="submit" class="submit-button" id="submit-button" value="Save">
     </form>
     <script>
@@ -193,9 +197,11 @@
 
         const vscode = acquireVsCodeApi();
 
-        document.querySelector('textarea[name="includePatterns"]').value = "**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\n**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake\n**/*.ts\n**/*.js";
-        document.querySelector('textarea[name="excludePatterns"]').value = "node_modules/**\n.git/**\ngithub/**\ngitlab/**";
+        <!-- INIT_SCRIPTS_CONTENT -->
+        // document.querySelector('textarea[name="includePatterns"]').value = "**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\n**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake\n**/*.ts\n**/*.js";
+        // document.querySelector('textarea[name="excludePatterns"]').value = "node_modules/**\n.git/**\ngithub/**\ngitlab/**";
 
+        // 新增一条配置
         function addFolderConfig() {
             const folderConfigs = document.getElementById('folderConfigs');
             const newConfig = document.createElement('div');
@@ -209,6 +215,7 @@
             folderConfigs.appendChild(newConfig);
         }
 
+        // 删除一条配置
         function removeFolderConfig(button) {
             const folderConfigs = document.getElementById('folderConfigs');
             if (folderConfigs.children.length > 1) {
@@ -218,6 +225,7 @@
             }
         }
 
+        // 保存UI配置到文件
         document.getElementById('configForm').addEventListener('submit', function (event) {
             event.preventDefault();
 
@@ -236,11 +244,13 @@
 
             const syncOnSave = document.getElementById('syncOnSave').checked;
             const createTargetFolder = document.getElementById('createTargetFolder').checked;
+            const fileEncoderSelector = document.getElementById('fileEncoderSelector').value;
 
             const newConfig = {
                 targetFolders: targetFolders,
                 syncOnSave: syncOnSave,
-                createTargetFolder: createTargetFolder
+                createTargetFolder: createTargetFolder,
+                fileEncoderSelector: fileEncoderSelector,
             };
 
             vscode.postMessage({

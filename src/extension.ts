@@ -14,10 +14,35 @@ interface SyncConfig {
     }>;
     syncOnSave: boolean;
     createTargetFolder: boolean;
+    fileEncoderSelector: string;
 }
 
 let config: SyncConfig;
 let bSyning: boolean = true;
+
+/**
+ * 复制文件并修改行尾格式
+ * @param {string} filePath 源文件路径
+ * @param {string} destPath 目标文件路径
+ * @param {'lf' | 'crlf'} lineEnding 目标行尾格式（lf 或 crlf）
+ */
+function copyFileWithLineEnding(filePath: string, destPath: string, lineEnding: string) {
+    // 读取源文件内容
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    // 统一行尾格式
+    let normalizedContent;
+    if (lineEnding === 'lf') {
+        normalizedContent = content.replace(/\r\n/g, '\n'); // 将 CRLF 替换为 LF
+    } else if (lineEnding === 'crlf') {
+        normalizedContent = content.replace(/\n/g, '\r\n'); // 将 LF 替换为 CRLF
+    } else {
+        throw new Error('Invalid line ending. Use "lf" or "crlf".');
+    }
+
+    // 写入目标文件
+    fs.writeFileSync(destPath, normalizedContent, 'utf8');
+}
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -33,7 +58,8 @@ export function activate(context: vscode.ExtensionContext) {
                         exclude: ['node_modules/**', '.git/**', 'github/**', 'gitlab/**']
                     }],
                     syncOnSave: true,
-                    createTargetFolder: true
+                    createTargetFolder: true,
+                    fileEncoderSelector: 'nochange'
                 };
                 fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
             }
@@ -45,7 +71,8 @@ export function activate(context: vscode.ExtensionContext) {
             let configData: SyncConfig = {
                 targetFolders: [],
                 syncOnSave: false,
-                createTargetFolder: false
+                createTargetFolder: false,
+                fileEncoderSelector: 'nochange'
             };
             if (fs.existsSync(configPath)) {
                 try {
@@ -129,7 +156,11 @@ export function activate(context: vscode.ExtensionContext) {
                 `;
                 syncJsonContent += `</div>`;
             });
+            let initScriptsContent = `
+                document.querySelector('select[name="fileEncoderSelector"]').value = '${configData.fileEncoderSelector}';
+            `;
             htmlContent = htmlContent.replace('<!-- SYNC_JSON_CONTENT -->', syncJsonContent);
+            htmlContent = htmlContent.replace('<!-- INIT_SCRIPTS_CONTENT -->', initScriptsContent);
             panel.webview.html = htmlContent;
         })
     );
@@ -182,25 +213,36 @@ export function activate(context: vscode.ExtensionContext) {
                 if (target.path === '' || path.resolve(vscode.workspace.rootPath || '', target.path) === vscode.workspace.rootPath) {
                     continue;
                 }
+                // 创建目标目录结构
                 const targetPath = path.resolve(vscode.workspace.rootPath || '', target.path);
-                if (config.createTargetFolder && !fs.existsSync(targetPath)) {
-                    fs.mkdirSync(targetPath, { recursive: true });
-                }
                 const relativePath = vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, filePath) : '';
                 const destPath = path.join(targetPath, relativePath);
+                try {
+                    const destDir = path.dirname(destPath);
+                    if (config.createTargetFolder && !fs.existsSync(destDir)) {
+                        fs.mkdirSync(destDir, { recursive: true });
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage(`创建目标文件夹 ${path.dirname(destPath)} 失败: ${error}`);
+                }
+
                 // 检查文件是否符合include/exclude规则
                 // 提前编译正则表达式
                 const includePatterns = target.include.map(pattern => minimatch.makeRe(pattern));
                 const excludePatterns = target.exclude.map(pattern => minimatch.makeRe(pattern));
-                const includeSync = includePatterns.some(regex => regex && regex.test(relativePath));
-                const excludeSync = excludePatterns.every(regex => !regex || !regex.test(relativePath));
+                const includeSync = includePatterns.some(regex => regex && regex.test(relativePath.replace(/\\/g, '/')));
+                const excludeSync = excludePatterns.every(regex => !regex || !regex.test(relativePath.replace(/\\/g, '/')));
                 const shouldSync = includeSync && excludeSync;
                 if (shouldSync) {
-                    // 创建目标目录结构
                     try {
-                        fs.mkdirSync(path.dirname(destPath), { recursive: true });
                         // 执行文件复制
-                        fs.copyFileSync(filePath, destPath);
+                        if (config.fileEncoderSelector === 'lf') {
+                            copyFileWithLineEnding(filePath, destPath, 'lf');
+                        } else if (config.fileEncoderSelector === 'crlf') {
+                            copyFileWithLineEnding(filePath, destPath, 'crlf');
+                        } else {
+                            fs.copyFileSync(filePath, destPath);
+                        }
                         // 添加消息提示逻辑
                         vscode.window.setStatusBarMessage(`文件 ${filePath} 已同步到 ${destPath}`);
                     } catch (error) {

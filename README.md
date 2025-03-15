@@ -32,13 +32,31 @@ Open the syncOnSave configuration page using the syncOnSave.initConfigSyncFile c
 
 ```json
 {
-  "targetFolders": [
-    {
-      "path": ".",
-      "include": ["**/*.ts", "**/*.js"],
-      "exclude": ["node_modules/**"]
-    }
-  ],
-  "syncOnSave": true,
-  "createTargetFolder": true
-}
+    "lang": "en",
+    "targetFolders": [
+      {
+        "path": "D:\\backup",
+        "include": [
+          "**/*.h",
+          "**/*.hpp",
+          "**/*.cc",
+          "**/*.cxx",
+          "**/*.cpp",
+          "**/*.ui",
+          "**/*.cmake",
+          "**/CMakeLists.txt",
+          "**/*.ts",
+          "**/*.js"
+        ],
+        "exclude": [
+          "node_modules/**",
+          ".git/**",
+          "github/**",
+          "gitlab/**"
+        ],
+        "syncSwitcher": true,
+        "createDir": true,
+        "fileEncoderSelector": "lf"
+      }
+    ]
+  }

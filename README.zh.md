@@ -32,13 +32,31 @@ syncOnSave扩展支持在保存的时候把文件保存备份到其他的文件�
 
 ```json
 {
-  "targetFolders": [
-    {
-      "path": ".",
-      "include": ["**/*.ts", "**/*.js"],
-      "exclude": ["node_modules/**"]
-    }
-  ],
-  "syncOnSave": true,
-  "createTargetFolder": true
-}
+    "lang": "en",
+    "targetFolders": [
+      {
+        "path": "D:\\backup",
+        "include": [
+          "**/*.h",
+          "**/*.hpp",
+          "**/*.cc",
+          "**/*.cxx",
+          "**/*.cpp",
+          "**/*.ui",
+          "**/*.cmake",
+          "**/CMakeLists.txt",
+          "**/*.ts",
+          "**/*.js"
+        ],
+        "exclude": [
+          "node_modules/**",
+          ".git/**",
+          "github/**",
+          "gitlab/**"
+        ],
+        "syncSwitcher": true,
+        "createDir": true,
+        "fileEncoderSelector": "lf"
+      }
+    ]
+  }

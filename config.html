@@ -106,6 +106,15 @@
         .language-switcher {
             align-items: flex-end;
         }
+
+        /* 可选：自定义 hr 的样式 */
+        hr {
+            border: none; /* 移除默认边框 */
+            height: 2px; /* 直线厚度 */
+            background-color: black; /* 直线颜色 */
+            width: 100%; /* 直线宽度 */
+            margin: 20px auto; /* 居中显示 */
+        }        
     </style>
 </head>
 
@@ -121,23 +130,12 @@
             <h1 id="form-title">Synchronization Configuration</h1>
         </div>
         <div id="folderConfigs">
-            <!-- SYNC_JSON_CONTENT -->
-
         </div>
-        <button type="button" id="add-button" onclick="addFolderConfig()">Add Configuration</button>
-        <div class="form-grid">
-            <label for="syncOnSave" id="sync-label">Sync on Save:</label>
-            <input type="checkbox" id="syncOnSave" name="syncOnSave" checked>
+        <div>
+            <button type="button" id="add-button" onclick="addFolderConfig()">Add Configuration</button>
+            </p>
+            <input type="submit" class="submit-button" id="submit-button" value="Save">
         </div>
-        <div class="form-grid">
-            <label for="createTargetFolder" id="create-label">Create Target Folder:</label>
-            <input type="checkbox" id="createTargetFolder" name="createTargetFolder" checked>
-        </div>
-        <div class="form-grid">
-            <label for="fileEncoderSelector" id="file-encoder">File Encoder Format:</label>
-            <select id="fileEncoderSelector" name="fileEncoderSelector"><option value="nochange">no change</option><option value="lf">lf</option><option value="crlf">crlf</option></select>
-        </div>
-        <input type="submit" class="submit-button" id="submit-button" value="Save">
     </form>
     <script>
         // 语言资源
@@ -150,7 +148,7 @@
                 remove: "Remove",
                 add: "Add Configuration",
                 sync: "Sync on Save:",
-                create: "Create Target Folder:",
+                create: "Create Folder If Not Exist:",
                 submit: "Save",
                 alert: "At least one configuration must be retained!"
             },
@@ -168,11 +166,13 @@
             }
         };
 
+        const vscode = acquireVsCodeApi();
         // 默认语言
         let currentLang = 'en';
-
         // 更新页面语言
         function updateLanguage(lang) {
+            console.log("updateLanguage: ", lang);
+
             currentLang = lang;
             document.documentElement.lang = lang;
             document.getElementById('form-title').textContent = translations[lang].title;
@@ -192,12 +192,59 @@
             updateLanguage(lang);
         });
 
+
+        function initUiFromConfig(syncConfigObject) {
+            try {
+                currentLang = syncConfigObject.lang;
+                
+                document.getElementById('language-selector').value = syncConfigObject.lang;
+                
+                syncConfigObject.targetFolders.forEach((targetFolder, index) => {
+                    const folderConfigs = document.getElementById('folderConfigs');
+                    const newConfig = document.createElement('div');
+                    newConfig.className = 'form-grid';
+                    newConfig.innerHTML = `
+                        <input type="text" name="targetPath" placeholder="${translations[currentLang].targetPath}" value="${targetFolder.path}" required>
+                        <textarea name="includePatterns" placeholder="${translations[currentLang].includePatterns}">${targetFolder.include.join('\n')}</textarea>
+                        <textarea name="excludePatterns" placeholder="${translations[currentLang].excludePatterns}">${targetFolder.exclude.join('\n')}</textarea>
+                        <button type="button" class="remove-button" id="remove-button" onclick="removeFolderConfig(this)">${translations[currentLang].remove}</button>
+                        <label for="syncSwitcher" id="sync-label">Sync on Save:</label>
+                        <input type="checkbox" id="syncSwitcher" name="syncSwitcher" ${targetFolder.syncSwitcher ? 'checked' : ''}>
+                        <label for="createDir" id="create-label">Create Folder If Not Exist:</label>
+                        <input type="checkbox" id="createDir" name="createDir" ${targetFolder.createDir ? 'checked' : ''}>
+                        <label for="fileEncoderSelector" id="file-encoder">File Encoder Format:</label>
+                        <select id="fileEncoderSelector" name="fileEncoderSelector">
+                            <option value="nochange">no change</option>
+                            <option value="lf">lf</option>
+                            <option value="crlf">crlf</option>
+                        </select>
+                    `;
+                    // const selectConfig = document.createElement('select');
+                    // selectConfig.id = 'fileEncoderSelector';  
+                    // selectConfig.name = 'fileEncoderSelector';                     
+                    // selectConfig.innerHTML = `<option value="nochange">no change</option>
+                    //  <option value="lf">lf</option>
+                    //  <option value="crlf">crlf</option>
+                    // `;
+                    // selectConfig.value = targetFolder.fileEncoderSelector;
+                    // newConfig.appendChild(selectConfig);
+                    folderConfigs.appendChild(newConfig);
+                    const newHr = document.createElement('hr');
+                    folderConfigs.appendChild(newHr);
+
+                    newConfig.querySelector('select[name="fileEncoderSelector"]').value = targetFolder.fileEncoderSelector;
+                });
+                
+            } catch (error) {
+                console.log('initUiFromConfig error: ', error);
+            }
+        }
+
+        initUiFromConfig(<!-- INIT_SCRIPTS_CONTENT -->);
+
         // 初始化语言
         updateLanguage(currentLang);
-
-        const vscode = acquireVsCodeApi();
-
-        <!-- INIT_SCRIPTS_CONTENT -->
+        
         // document.querySelector('textarea[name="includePatterns"]').value = "**/*.h\n**/*.hpp\n**/*.cpp\n**/*.c\n**/*.cxx\n**/*.cc\n**/*.ui\n**/*.cmake\n**/*.ts\n**/*.js";
         // document.querySelector('textarea[name="excludePatterns"]').value = "node_modules/**\n.git/**\ngithub/**\ngitlab/**";
 
@@ -211,8 +258,20 @@
                 <textarea name="includePatterns" placeholder="${translations[currentLang].includePatterns}"></textarea>
                 <textarea name="excludePatterns" placeholder="${translations[currentLang].excludePatterns}"></textarea>
                 <button type="button" class="remove-button" onclick="removeFolderConfig(this)">${translations[currentLang].remove}</button>
+                <label for="syncSwitcher" id="sync-label">Sync on Save:</label>
+                <input type="checkbox" id="syncSwitcher" name="syncSwitcher" checked>
+                <label for="createDir" id="create-label">Create Folder If Not Exist:</label>
+                <input type="checkbox" id="createDir" name="createDir" checked>
+                <label for="fileEncoderSelector" id="file-encoder">File Encoder Format:</label>
+                <select id="fileEncoderSelector" name="fileEncoderSelector">
+                    <option value="nochange">no change</option>
+                    <option value="lf">lf</option>
+                    <option value="crlf">crlf</option>
+                </select>                
             `;
             folderConfigs.appendChild(newConfig);
+            const newHr = document.createElement('hr');
+            folderConfigs.appendChild(newHr);
         }
 
         // 删除一条配置
@@ -230,27 +289,29 @@
             event.preventDefault();
 
             const folderConfigs = document.querySelectorAll('#folderConfigs .form-grid');
+            console.log("folderConfigs: ", folderConfigs);
             const targetFolders = [];
             folderConfigs.forEach(config => {
+                console.log("config: ", config);
                 const targetPath = config.querySelector('input[name="targetPath"]').value;
                 const includePatterns = config.querySelector('textarea[name="includePatterns"]').value.split('\n').filter(line => line.trim() !== '');
                 const excludePatterns = config.querySelector('textarea[name="excludePatterns"]').value.split('\n').filter(line => line.trim() !== '');
+                const syncSwitcher = config.querySelector('input[name="syncSwitcher"]').checked;
+                const createDir = config.querySelector('input[name="createDir"]').checked;
+                const fileEncoderSelector = config.querySelector('select[name="fileEncoderSelector"]').value;
                 targetFolders.push({
                     path: targetPath,
                     include: includePatterns,
-                    exclude: excludePatterns
+                    exclude: excludePatterns,
+                    syncSwitcher: syncSwitcher,
+                    createDir: createDir,
+                    fileEncoderSelector: fileEncoderSelector
                 });
             });
 
-            const syncOnSave = document.getElementById('syncOnSave').checked;
-            const createTargetFolder = document.getElementById('createTargetFolder').checked;
-            const fileEncoderSelector = document.getElementById('fileEncoderSelector').value;
-
             const newConfig = {
+                lang: currentLang,
                 targetFolders: targetFolders,
-                syncOnSave: syncOnSave,
-                createTargetFolder: createTargetFolder,
-                fileEncoderSelector: fileEncoderSelector,
             };
 
             vscode.postMessage({

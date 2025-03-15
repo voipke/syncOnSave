@@ -1,6 +1,6 @@
 # Sync on Save
 
-The syncOnSave extension supports backing up files to other folders upon saving. It also supports backing up to multiple target folders. File formats can be specified using regular expressions, and it includes filtering options to exclude unwanted file formats.
+The syncOnSave extension supports backing up files to other folders upon saving. It also supports backing up to multiple target folders. File formats can be specified using regular expressions, and it includes filtering options to exclude unwanted file formats. When synchronizing files, you can choose whether to convert them to lf or crlf format.
 
 ## Features
 

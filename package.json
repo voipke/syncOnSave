@@ -5,9 +5,9 @@
     "author": "voipke <voipke@qq.com>",
     "publisher": "voipke",
     "icon": "resources/icon.png",
-    "version": "0.0.10",
+    "version": "0.0.11",
     "engines": {
-        "vscode": "^1.98.0"
+        "vscode": "^0.10.1"
     },
     "repository": {
         "type": "git",

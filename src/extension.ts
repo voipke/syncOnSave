@@ -133,6 +133,10 @@ export function activate(context: vscode.ExtensionContext) {
         const watcher = vscode.workspace.onDidSaveTextDocument(async (document) => {
             const filePath = document.uri.fsPath;
             const configPath = vscode.workspace.rootPath ? path.join(vscode.workspace.rootPath, 'sync.json') : '';
+            // 判断文件是否在当前工作目录下
+            if (!vscode.workspace.rootPath || !filePath.startsWith(vscode.workspace.rootPath)) {
+                return;
+            }
 
             if (!bSyning) {
                 return;

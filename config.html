@@ -212,6 +212,8 @@
                         <input type="checkbox" id="syncSwitcher" name="syncSwitcher" ${targetFolder.syncSwitcher ? 'checked' : ''}>
                         <label for="createDir" id="create-label">Create Folder If Not Exist:</label>
                         <input type="checkbox" id="createDir" name="createDir" ${targetFolder.createDir ? 'checked' : ''}>
+                        <label for="copyFromWorkspace" id="copyFromWorkspace-label">Copy From Workspace Path:</label>
+                        <input type="checkbox" id="copyFromWorkspace" name="copyFromWorkspace" ${targetFolder.copyFromWorkspace ? 'checked' : ''}>
                         <label for="fileEncoderSelector" id="file-encoder">File Encoder Format:</label>
                         <select id="fileEncoderSelector" name="fileEncoderSelector">
                             <option value="nochange">no change</option>
@@ -219,18 +221,7 @@
                             <option value="crlf">crlf</option>
                         </select>
                     `;
-                    // const selectConfig = document.createElement('select');
-                    // selectConfig.id = 'fileEncoderSelector';  
-                    // selectConfig.name = 'fileEncoderSelector';                     
-                    // selectConfig.innerHTML = `<option value="nochange">no change</option>
-                    //  <option value="lf">lf</option>
-                    //  <option value="crlf">crlf</option>
-                    // `;
-                    // selectConfig.value = targetFolder.fileEncoderSelector;
-                    // newConfig.appendChild(selectConfig);
                     folderConfigs.appendChild(newConfig);
-                    // const newHr = document.createElement('hr');
-                    // folderConfigs.appendChild(newHr);
 
                     newConfig.querySelector('select[name="fileEncoderSelector"]').value = targetFolder.fileEncoderSelector;
                 });
@@ -262,6 +253,8 @@
                 <input type="checkbox" id="syncSwitcher" name="syncSwitcher" checked>
                 <label for="createDir" id="create-label">Create Folder If Not Exist:</label>
                 <input type="checkbox" id="createDir" name="createDir" checked>
+                <label for="copyFromWorkspace" id="copyFromWorkspace-label">Copy As Workspace Path:</label>
+                <input type="checkbox" id="copyFromWorkspace" name="copyFromWorkspace" checked>                
                 <label for="fileEncoderSelector" id="file-encoder">File Encoder Format:</label>
                 <select id="fileEncoderSelector" name="fileEncoderSelector">
                     <option value="nochange">no change</option>
@@ -298,6 +291,7 @@
                 const excludePatterns = config.querySelector('textarea[name="excludePatterns"]').value.split('\n').filter(line => line.trim() !== '');
                 const syncSwitcher = config.querySelector('input[name="syncSwitcher"]').checked;
                 const createDir = config.querySelector('input[name="createDir"]').checked;
+                const copyFromWorkspace = config.querySelector('input[name="copyFromWorkspace"]').checked;
                 const fileEncoderSelector = config.querySelector('select[name="fileEncoderSelector"]').value;
                 targetFolders.push({
                     path: targetPath,
@@ -305,6 +299,7 @@
                     exclude: excludePatterns,
                     syncSwitcher: syncSwitcher,
                     createDir: createDir,
+                    copyFromWorkspace: copyFromWorkspace,
                     fileEncoderSelector: fileEncoderSelector
                 });
             });

@@ -13,6 +13,7 @@ interface SyncConfig {
         exclude: string[];
         syncSwitcher: boolean;
         createDir: boolean;
+        copyFromWorkspace: boolean;
         fileEncoderSelector: string;
     }>;
 }
@@ -26,6 +27,7 @@ const defaultConfig: SyncConfig = {
         exclude: ['node_modules/**', '.git/**', 'github/**', 'gitlab/**'],
         syncSwitcher: true,
         createDir: true,
+        copyFromWorkspace: true,
         fileEncoderSelector: 'nochange'
     }],
 };
@@ -191,12 +193,19 @@ export function activate(context: vscode.ExtensionContext) {
                     continue;
                 }
 
-                if (target.path === '' || path.resolve(configRootDir || '', target.path) === configRootDir) {
+                let srcRootPath = '';
+                if (target.copyFromWorkspace) {
+                    srcRootPath = vscode.workspace.rootPath;
+                } else {
+                    srcRootPath = configRootDir;
+                }
+                if (target.path === '' || path.resolve(srcRootPath || '', target.path) === srcRootPath) {
                     continue;
                 }
                 // 创建目标目录结构
-                const targetPath = path.resolve(configRootDir || '', target.path);
-                const relativePath = configRootDir ? path.relative(configRootDir, filePath) : '';
+
+                const targetPath = path.resolve(srcRootPath || '', target.path);
+                const relativePath = srcRootPath ? path.relative(srcRootPath, filePath) : '';
                 const destPath = path.join(targetPath, relativePath);
                 try {
                     const destDir = path.dirname(destPath);

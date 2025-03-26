@@ -22,7 +22,7 @@ const defaultConfig: SyncConfig = {
     lang: 'en',
     targetFolders: [{
         path: './',
-        include: ['**/*.h', '**/*.hpp', '**/*.cc', '**/*.cxx', '**/*.cpp', '**/*.ui', '**/*.cmake', '**/CMakeLists.txt', '**/*.ts', '**/*.js'],
+        include: ['**/*.h', '**/*.hpp', '**/*.cc', '**/*.cxx', '**/*.cpp', '**/*.ui', '**/*.cmake', '**/CMakeLists.txt', '**/*.ts', '**/*.js', '**/*.py'],
         exclude: ['node_modules/**', '.git/**', 'github/**', 'gitlab/**'],
         syncSwitcher: true,
         createDir: true,
@@ -54,6 +54,20 @@ function copyFileWithLineEnding(filePath: string, destPath: string, lineEnding: 
 
     // 写入目标文件
     fs.writeFileSync(destPath, normalizedContent, 'utf8');
+}
+
+function findSyncConfig(currentPath: string) {
+    let dir = path.dirname(currentPath);
+    const workspaceRoot = vscode.workspace.rootPath || '';
+    
+    while (dir !== workspaceRoot && dir !== path.parse(dir).root) {
+        const configPath = path.join(dir, 'sync.json');
+        if (fs.existsSync(configPath)) {
+            return configPath;
+        }
+        dir = path.dirname(dir);
+    }
+    return path.join(workspaceRoot, 'sync.json');
 }
 
 // This method is called when your extension is activated
@@ -132,7 +146,9 @@ export function activate(context: vscode.ExtensionContext) {
     try {
         const watcher = vscode.workspace.onDidSaveTextDocument(async (document) => {
             const filePath = document.uri.fsPath;
-            const configPath = vscode.workspace.rootPath ? path.join(vscode.workspace.rootPath, 'sync.json') : '';
+            // const rootConfigPath = vscode.workspace.rootPath ? path.join(vscode.workspace.rootPath, 'sync.json') : '';
+            const configPath = findSyncConfig(filePath);
+            const configRootDir = path.dirname(configPath);
             // 判断文件是否在当前工作目录下
             if (!vscode.workspace.rootPath || !filePath.startsWith(vscode.workspace.rootPath)) {
                 return;
@@ -141,19 +157,14 @@ export function activate(context: vscode.ExtensionContext) {
             if (!bSyning) {
                 return;
             }
-            if (!globalConfig) {
-                if (!fs.existsSync(configPath)) {
-                    // console.log('未找到sync.json配置文件，不激活watcher');
-                    return;
-                }
-                try {
-                    globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-                } catch (error) {
-                    console.log('未找到sync.json配置文件，不激活watcher');
-                    vscode.window.showErrorMessage(`配置文件格式读取失败: ${error}`);
-                    return;
-                }
-            } else if (filePath === configPath) {
+
+            // 如果不存在配置文件
+            if (!fs.existsSync(configPath)) {
+                return;
+            }
+
+            // 如果编辑的是sync.json文件本身
+            if (filePath === configPath) {
                 try {
                     const newConfig: SyncConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
                     globalConfig = newConfig;
@@ -164,18 +175,28 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
+            // if (!globalConfig && fs.existsSync(configPath)) 
+            {
+                try {
+                    globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+                } catch (error) {
+                    console.log('当前目录的sync.json文件配置加载失败!');
+                    vscode.window.showErrorMessage(`当前目录的sync.json文件配置加载失败: ${error}`);
+                    return;
+                }
+            }
 
             for (const target of globalConfig.targetFolders) {
                 if (!target.syncSwitcher) {
                     continue;
                 }
 
-                if (target.path === '' || path.resolve(vscode.workspace.rootPath || '', target.path) === vscode.workspace.rootPath) {
+                if (target.path === '' || path.resolve(configRootDir || '', target.path) === configRootDir) {
                     continue;
                 }
                 // 创建目标目录结构
-                const targetPath = path.resolve(vscode.workspace.rootPath || '', target.path);
-                const relativePath = vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, filePath) : '';
+                const targetPath = path.resolve(configRootDir || '', target.path);
+                const relativePath = configRootDir ? path.relative(configRootDir, filePath) : '';
                 const destPath = path.join(targetPath, relativePath);
                 try {
                     const destDir = path.dirname(destPath);
